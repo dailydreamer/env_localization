@@ -4,7 +4,17 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/bgsegm.hpp>
 #include <opencv2/calib3d.hpp>
+#include <opencv2/aruco.hpp>
 #include "ipm.h"
+
+bool readCameraParameters(std::string filename, cv::Mat &camMatrix, cv::Mat &distCoeffs) {
+    cv::FileStorage fs(filename, cv::FileStorage::READ);
+    if(!fs.isOpened())
+        return false;
+    fs["camera_matrix"] >> camMatrix;
+    fs["distortion_coefficients"] >> distCoeffs;
+    return true;
+}
 
 void subtractBackground(std::string videoPath, bool debug = false) {
     cv::namedWindow("frame");
@@ -62,26 +72,29 @@ int main() {
 //    std::string videoPath = "./Video_001.avi";
 //    subtractBackground(videoPath, false);
 
-    cv::Size patternSize(6, 9);
-    std::string calibImagePath = "chess.jpg";
-    cv::Mat calibImage = cv::imread(calibImagePath, cv::IMREAD_GRAYSCALE);
 
-    cv::namedWindow("chess");
-    cv::imshow("chess", calibImage);
-
-    std::vector<cv::Point2f> corners;
-    bool isFound = cv::findChessboardCorners(calibImage, patternSize, corners, cv::CALIB_CB_ADAPTIVE_THRESH + cv::CALIB_CB_NORMALIZE_IMAGE + cv::CALIB_CB_FAST_CHECK);
-
-    std::cout << isFound << std::endl << corners << std::endl;
-
-    cv::waitKey(0);
-
-    std::vector<cv::Point2f> worldPoints;
-    for (int i = 0; i < patternSize.height; i++) {
-        for (int j = 0; j < patternSize.width; j++) {
-
-        }
-    }
+//    std::string calibImagePath = "chess.jpg";
+//    cv::Mat calibImage = cv::imread(calibImagePath, cv::IMREAD_GRAYSCALE);
+//    cv::Size patternSize(6, 9);
+//    auto clahe = cv::createCLAHE();
+//    clahe->apply(calibImage, calibImage);
+//
+//    cv::namedWindow("chess");
+//    cv::imshow("chess", calibImage);
+//
+//    std::vector<cv::Point2f> corners;
+//    bool isFound = cv::findChessboardCorners(calibImage, patternSize, corners, cv::CALIB_CB_ADAPTIVE_THRESH + cv::CALIB_CB_NORMALIZE_IMAGE + cv::CALIB_CB_FAST_CHECK);
+//
+//    std::cout << isFound << std::endl << corners << std::endl;
+//
+//    cv::waitKey(0);
+//
+//    std::vector<cv::Point2f> worldPoints;
+//    for (int i = 0; i < patternSize.height; i++) {
+//        for (int j = 0; j < patternSize.width; j++) {
+//
+//        }
+//    }
 
 //    std::string intrinsicsPath = "./intrinsics.xml";
 //    cv::Mat cameraMatrix, distCoeffs;
@@ -92,7 +105,39 @@ int main() {
 //
 //    cv::Mat rotationVector, translationVector;
 //    cv::solvePnP(worldPoints, corners, cameraMatrix, distCoeffs, rotationVector, translationVector, false, cv::SOLVEPNP_EPNP);
+//    cv::projectPoints()
 
-    //cv::projectPoints()
+
+    std::string calibImagePath = "aruco.png";
+    cv::Mat calibImage = cv::imread(calibImagePath);
+
+    std::vector<int> markerIds;
+    std::vector<std::vector<cv::Point2f>> corners, rejected;
+    auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+    auto detectorParams = cv::aruco::DetectorParameters::create();
+    detectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+    cv::aruco::detectMarkers(calibImage, dictionary, corners, markerIds, detectorParams, rejected);
+
+    cv::Mat resImage;
+    calibImage.copyTo(resImage);
+
+    std::cout << corners.size() << " " << markerIds.size() << std::endl;
+
+    cv::aruco::drawDetectedMarkers(resImage, corners, markerIds);
+    cv::aruco::drawDetectedMarkers(resImage, rejected);
+    cv::namedWindow("res");
+    cv::imshow("res", resImage);
+
+    float markerLength = 0.05;
+    std::vector<cv::Vec3d> rvecs, tvecs;
+    cv::Mat cameraMatrix, distCoeffs;
+    readCameraParameters("intrinsics.xml", cameraMatrix, distCoeffs);
+    cv::aruco::estimatePoseSingleMarkers(corners, markerLength, cameraMatrix, distCoeffs, rvecs, tvecs);
+    for(auto i = 0; i < markerIds.size(); ++i) {
+        cv::aruco::drawAxis(resImage, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 0.5f);
+    }
+
+    cv::waitKey(0);
+
     return 0;
 }
