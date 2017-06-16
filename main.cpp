@@ -8,12 +8,24 @@
 #include "ipm.h"
 
 bool readCameraParameters(std::string filename, cv::Mat &camMatrix, cv::Mat &distCoeffs) {
+    std::cout << filename << std::endl;
     cv::FileStorage fs(filename, cv::FileStorage::READ);
     if(!fs.isOpened())
         return false;
     fs["camera_matrix"] >> camMatrix;
     fs["distortion_coefficients"] >> distCoeffs;
     return true;
+}
+
+void generateArucoMarker() {
+    cv::Mat markerImage;
+    auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+    int markerId = 0;
+    int markerSize = 200;
+    int markerBorderSize = 1;
+    cv::aruco::drawMarker(dictionary, markerId, markerSize, markerImage, markerBorderSize);
+    std::string markerImagePath = "gen_aruco.png";
+    cv::imwrite(markerImagePath, markerImage);
 }
 
 void subtractBackground(std::string videoPath, bool debug = false) {
@@ -107,9 +119,11 @@ int main() {
 //    cv::solvePnP(worldPoints, corners, cameraMatrix, distCoeffs, rotationVector, translationVector, false, cv::SOLVEPNP_EPNP);
 //    cv::projectPoints()
 
+//    generateArucoMarker();
 
-    std::string calibImagePath = "aruco.png";
+    std::string calibImagePath = "aruco7.png";
     cv::Mat calibImage = cv::imread(calibImagePath);
+    //cv::resize(calibImage, calibImage, cv::Size(800, 600));
 
     std::vector<int> markerIds;
     std::vector<std::vector<cv::Point2f>> corners, rejected;
@@ -121,17 +135,17 @@ int main() {
     cv::Mat resImage;
     calibImage.copyTo(resImage);
 
-    std::cout << corners.size() << " " << markerIds.size() << std::endl;
+    std::cout <<"marker: " << markerIds.size() << " rejected: " << rejected.size() << std::endl;
 
     cv::aruco::drawDetectedMarkers(resImage, corners, markerIds);
-    cv::aruco::drawDetectedMarkers(resImage, rejected);
-    cv::namedWindow("res");
+ //   cv::aruco::drawDetectedMarkers(resImage, rejected);
+    cv::namedWindow("res", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     cv::imshow("res", resImage);
 
-    float markerLength = 0.05;
+    float markerLength = 0.14;    // 14cm
     std::vector<cv::Vec3d> rvecs, tvecs;
     cv::Mat cameraMatrix, distCoeffs;
-    readCameraParameters("intrinsics.xml", cameraMatrix, distCoeffs);
+    readCameraParameters("./ost.yaml", cameraMatrix, distCoeffs);
     cv::aruco::estimatePoseSingleMarkers(corners, markerLength, cameraMatrix, distCoeffs, rvecs, tvecs);
     for(auto i = 0; i < markerIds.size(); ++i) {
         cv::aruco::drawAxis(resImage, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 0.5f);
