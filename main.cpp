@@ -137,81 +137,44 @@ void subtractBackground(std::string videoPath, bool debug = false) {
 }
 
 int main() {
-    /*
-    // The 4-points at the input image, camera coordinate
-    std::vector<cv::Point2f> inputPoints;
-    inputPoints.push_back( cv::Point2f(0, height) );
-    inputPoints.push_back( cv::Point2f(width, height) );
-    inputPoints.push_back( cv::Point2f(width/2+30, 140) );
-    inputPoints.push_back( cv::Point2f(width/2-50, 140) );
-
-    // The 4-points correspondences in the output image, world coordinate
-    std::vector<cv::Point2f> outputPoints;
-    outputPoints.push_back( cv::Point2f(0, height) );
-    outputPoints.push_back( cv::Point2f(width, height) );
-    outputPoints.push_back( cv::Point2f(width, 0) );
-    outputPoints.push_back( cv::Point2f(0, 0) );
-
-    // IPM object
-    Ipm ipm( cv::Size(width, height), cv::Size(width, height), inputPoints, outputPoints);
-    */
 
 //    std::string videoPath = "./Video_001.avi";
 //    subtractBackground(videoPath, false);
 
 
-//    std::string calibImagePath = "chess.jpg";
-//    cv::Mat calibImage = cv::imread(calibImagePath, cv::IMREAD_GRAYSCALE);
-//    cv::Size patternSize(6, 9);
-//    auto clahe = cv::createCLAHE();
-//    clahe->apply(calibImage, calibImage);
-//
-//    cv::namedWindow("chess");
-//    cv::imshow("chess", calibImage);
-//
-//    std::vector<cv::Point2f> corners;
-//    bool isFound = cv::findChessboardCorners(calibImage, patternSize, corners, cv::CALIB_CB_ADAPTIVE_THRESH + cv::CALIB_CB_NORMALIZE_IMAGE + cv::CALIB_CB_FAST_CHECK);
-//
-//    std::cout << isFound << std::endl << corners << std::endl;
-//
-//    cv::waitKey(0);
-//
-//    std::vector<cv::Point2f> worldPoints;
-//    for (int i = 0; i < patternSize.height; i++) {
-//        for (int j = 0; j < patternSize.width; j++) {
-//
-//        }
-//    }
-
-//    std::string intrinsicsPath = "./intrinsics.xml";
-//    cv::Mat cameraMatrix, distCoeffs;
-//    cv::FileStorage fs(intrinsicsPath, cv::FileStorage::READ);
-//    fs["MY_MAT_NAME_IN_THE_XML"] >> cameraMatrix;
-//    fs["MY_MAT_NAME_IN_THE_XML"] >> distCoeffs;
-//    fs.release();
-//
-//    cv::Mat rotationVector, translationVector;
-//    cv::solvePnP(worldPoints, corners, cameraMatrix, distCoeffs, rotationVector, translationVector, false, cv::SOLVEPNP_EPNP);
-//    cv::projectPoints()
-
 //    generateArucoMarker();
 
-    // compute extrinsic
-//    float markerLength = 0.14;    // 14cm
-//    cv::Mat cameraMatrix, distCoeffs;
-//    bool readIntrinsicSuccess = readIntrinsic("./intrinsic.yml", cameraMatrix, distCoeffs);
-//    if (!readIntrinsicSuccess) {
-//        std::cout << "read intrinsic failed" << std::endl;
-//    }
-//    computeExtrinsic("aruco.png", markerLength, cameraMatrix, distCoeffs);
+    // read intrinsic
+    cv::Mat cameraMatrix, distCoeffs;
+    bool readIntrinsicSuccess = readIntrinsic("./intrinsic.yml", cameraMatrix, distCoeffs);
+    if (!readIntrinsicSuccess) {
+        std::cout << "read intrinsic failed" << std::endl;
+    }
 
+    // compute extrinsic
+    float markerLength = 14;    // 14cm
+    computeExtrinsic("aruco.png", markerLength, cameraMatrix, distCoeffs);
+
+    cv::Mat inputImage = cv::imread("aruco.png");
+
+    // read extrinsic
     std::vector<cv::Vec3d> rvecs, tvecs;
     bool readExtrinsicSuccess = readExtrinsic("./extrinsic.yml", rvecs, tvecs);
     if (!readExtrinsicSuccess) {
         std::cout << "read extrinsicc failed" << std::endl;
     }
-    std::cout << rvecs[0] << std::endl << tvecs[0] << std::endl;
-    cv::waitKey(0);
+    std::cout << "rvecs: " << rvecs[0] << " tvecs: " << tvecs[0] << std::endl;
 
+    Ipm ipm(inputImage.size(), rvecs[0], tvecs[0], cameraMatrix, distCoeffs);
+
+    cv::Mat birdViewImage;
+    cv::cvtColor(inputImage, inputImage, CV_BGR2GRAY);
+    cv::namedWindow("input");
+    cv::imshow("input", inputImage);
+    ipm.applyHomography(inputImage, birdViewImage);
+    cv::namedWindow("birdview");
+    cv::imshow("birdview", birdViewImage);
+
+    cv::waitKey(0);
     return 0;
 }

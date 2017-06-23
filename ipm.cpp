@@ -2,20 +2,57 @@
 // Created by dailydreamer on 17-6-8.
 //
 
-
+#include <iostream>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
 #include "ipm.h"
 
 // public
 
-Ipm::Ipm(const cv::Size &inputSize, const cv::Size &outputSize, const std::vector<cv::Point2f>& inputPoints, const std::vector<cv::Point2f>& outputPoints) {
+Ipm::Ipm(const cv::Size &outputSize, const std::vector<cv::Point2f>& inputPoints, const std::vector<cv::Point2f>& outputPoints) {
     auto inv_homography = cv::findHomography(outputPoints, inputPoints);
-    createMaps(inputSize, outputSize, inv_homography);
+    std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
+    createMaps(outputSize, inv_homography);
+}
+
+Ipm::Ipm(const cv::Size &outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs) {
+    // project world points
+    std::vector<cv::Point3f> worldPoints3D;
+    worldPoints3D.push_back(cv::Point3f(0, 0, 0));
+    worldPoints3D.push_back(cv::Point3f(1, 0, 0));
+    worldPoints3D.push_back(cv::Point3f(0, 1, 0));
+    worldPoints3D.push_back(cv::Point3f(1, 1, 0));
+    std::vector< cv::Point2f > imagePoints;
+    cv::projectPoints(worldPoints3D, rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
+
+    std::vector<cv::Point2f> worldPoints;
+    worldPoints.push_back(cv::Point2f(0, 0));
+    worldPoints.push_back(cv::Point2f(1, 0));
+    worldPoints.push_back(cv::Point2f(0, 1));
+    worldPoints.push_back(cv::Point2f(1, 1));
+
+    std::cout << "image points: " << std::endl << imagePoints << std::endl;
+    auto inv_homography = cv::findHomography(worldPoints, imagePoints);
+    std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
+    createMaps(outputSize, inv_homography);
+
+
+//    _map.create(outputSize);
+//    std::vector<cv::Point2f> pts;
+//
+//    for( int y = 0; y < outputSize.height; ++y )
+//    {
+//        auto* ptRow = _map.ptr<cv::Point2f>(y);
+//        for( int x = 0; x < outputSize.width; ++x )
+//        {
+//            cv::projectPoints(std::vector<cv::Point3f> { cv::Point3f( static_cast<float>(x), static_cast<float>(y), 0 ) }, rvec, tvec, cameraMatrix, distCoeffs, pts);
+//            ptRow[x] = pts[0];
+//        }
+//    }
 }
 
 void Ipm::applyHomography(const cv::Mat inputImage, cv::Mat& outputImage, int borderMode) {
-    cv::remap(inputImage, outputImage, _map_x, _map_y, cv::INTER_LINEAR, borderMode);
+    cv::remap(inputImage, outputImage, _map, cv::noArray(), cv::INTER_LINEAR, borderMode);
 }
 
 cv::Point2d Ipm::applyHomography( const cv::Point2d& _point, const cv::Mat& _H )
@@ -52,18 +89,15 @@ cv::Point3d Ipm::applyHomography( const cv::Point3d& _point, const cv::Mat& _H )
 
 // private
 
-void Ipm::createMaps(const cv::Size &inputSize, const cv::Size &outputSize, const cv::Mat inv_homography) {
-    _map_x.create(outputSize, CV_32F);
-    _map_y.create(outputSize, CV_32F);
-    for( int j = 0; j < outputSize.height; ++j )
+void Ipm::createMaps(const cv::Size &outputSize, const cv::Mat inv_homography) {
+    _map.create(outputSize);
+    for( int y = 0; y < outputSize.height; ++y )
     {
-        float* ptRowX = _map_x.ptr<float>(j);
-        float* ptRowY = _map_y.ptr<float>(j);
-        for( int i = 0; i < outputSize.width; ++i )
+        auto* ptRow = _map.ptr<cv::Point2f>(y);
+        for( int x = 0; x < outputSize.width; ++x )
         {
-            cv::Point2f pt = applyHomography( cv::Point2f( static_cast<float>(i), static_cast<float>(j) ), inv_homography );
-            ptRowX[i] = pt.x;
-            ptRowY[i] = pt.y;
+            cv::Point2f pt = applyHomography( cv::Point2f( static_cast<float>(x), static_cast<float>(y) ), inv_homography );
+            ptRow[x] = pt;
         }
     }
 }
