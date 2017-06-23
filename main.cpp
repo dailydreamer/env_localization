@@ -171,7 +171,7 @@ int main() {
     cv::cvtColor(inputImage, inputImage, CV_BGR2GRAY);
     cv::namedWindow("input");
     cv::imshow("input", inputImage);
-    ipm.applyHomography(inputImage, birdViewImage);
+    ipm.getIpmImage(inputImage, birdViewImage);
     cv::namedWindow("birdview");
     cv::imshow("birdview", birdViewImage);
 

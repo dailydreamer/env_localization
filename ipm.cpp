@@ -11,6 +11,7 @@
 
 Ipm::Ipm(const cv::Size &outputSize, const std::vector<cv::Point2d>& inputPoints, const std::vector<cv::Point2d>& outputPoints) {
     auto inv_homography = cv::findHomography(outputPoints, inputPoints);
+    _homography = inv_homography.inv();
     std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
     createMaps(outputSize, inv_homography);
 }
@@ -33,18 +34,19 @@ Ipm::Ipm(const cv::Size &outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec
 
     std::cout << "image points: " << std::endl << imagePoints << std::endl;
     auto inv_homography = cv::findHomography(worldPoints, imagePoints);
+    _homography = inv_homography.inv();
     std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
 //    inv_homography.at<double>(0,2) -= 100;
 //    std::cout << inv_homography.at<double>(0,2) << std::endl;
     createMaps(outputSize, inv_homography);
 
 
-//    _map.create(outputSize);
+//    _inv_map.create(outputSize);
 //    std::vector<cv::Point2d> pts;
 //
 //    for( int y = 0; y < outputSize.height; ++y )
 //    {
-//        auto* ptRow = _map.ptr<cv::Point2f>(y);
+//        auto* ptRow = _inv_map.ptr<cv::Point2f>(y);
 //        for( int x = 0; x < outputSize.width; ++x )
 //        {
 //            cv::projectPoints(std::vector<cv::Point3f> { cv::Point3f( static_cast<float>(x), static_cast<float>(y), 0 ) }, rvec, tvec, cameraMatrix, distCoeffs, pts);
@@ -53,8 +55,15 @@ Ipm::Ipm(const cv::Size &outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec
 //    }
 }
 
-void Ipm::applyHomography(const cv::Mat inputImage, cv::Mat& outputImage, int borderMode) {
-    cv::remap(inputImage, outputImage, _map, cv::noArray(), cv::INTER_LINEAR, borderMode);
+void Ipm::getIpmImage(const cv::Mat& inputImage, cv::Mat& outputImage, int borderMode) {
+    // use inverse mapping
+    cv::remap(inputImage, outputImage, _inv_map, cv::noArray(), cv::INTER_LINEAR, borderMode);
+}
+
+void Ipm::getIpmPoints(const std::vector<cv::Point2d>& inputPoints, std::vector<cv::Point2d> outputPoints) {
+    for (auto point : inputPoints) {
+        outputPoints.push_back(applyHomography(point, _homography));
+    }
 }
 
 cv::Point2d Ipm::applyHomography( const cv::Point2d& _point, const cv::Mat& _H )
@@ -92,10 +101,10 @@ cv::Point3d Ipm::applyHomography( const cv::Point3d& _point, const cv::Mat& _H )
 // private
 
 void Ipm::createMaps(const cv::Size &outputSize, const cv::Mat inv_homography) {
-    _map.create(outputSize);
+    _inv_map.create(outputSize);
     for( int y = 0; y < outputSize.height; ++y )
     {
-        auto* ptRow = _map.ptr<cv::Point2f>(y);
+        auto* ptRow = _inv_map.ptr<cv::Point2f>(y);
         for( int x = 0; x < outputSize.width; ++x )
         {
             cv::Point2d pt = applyHomography( cv::Point2d( static_cast<float>(x), static_cast<float>(y) ), inv_homography );
