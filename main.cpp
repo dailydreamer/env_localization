@@ -152,7 +152,7 @@ int main() {
     }
 
     // compute extrinsic
-    float markerLength = 14;    // 14cm
+    float markerLength = 140;    // 140 mm, 1mm = 1px
     computeExtrinsic("aruco.png", markerLength, cameraMatrix, distCoeffs);
 
     cv::Mat inputImage = cv::imread("aruco.png");

@@ -9,7 +9,7 @@
 
 class Ipm {
 public:
-    Ipm(const cv::Size& outputSize, const std::vector<cv::Point2f>& inputPoints, const std::vector<cv::Point2f>& outputPoints);
+    Ipm(const cv::Size& outputSize, const std::vector<cv::Point2d>& inputPoints, const std::vector<cv::Point2d>& outputPoints);
     Ipm(const cv::Size &outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs);
     void applyHomography(const cv::Mat inputImage, cv::Mat& outputImage, int borderMode = cv::BORDER_CONSTANT);
     cv::Point2d applyHomography( const cv::Point2d& _point, const cv::Mat& _H );
