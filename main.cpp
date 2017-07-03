@@ -54,7 +54,7 @@ bool readExtrinsic(std::string filename, std::vector<cv::Vec3d>& rvecs, std::vec
     return true;
 }
 
-void computeExtrinsic(std::string calibImagePath, float markerLength, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs) {
+void computeExtrinsic(std::string calibImagePath, float markerLength, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs, bool debug = false) {
     cv::Mat calibImage = cv::imread(calibImagePath);
     //cv::resize(calibImage, calibImage, cv::Size(800, 600));
 
@@ -74,22 +74,24 @@ void computeExtrinsic(std::string calibImagePath, float markerLength, const cv::
         std::cout << "write extrinsic failed" << std::endl;
     }
 
-//    cv::Mat resImage;
-//    calibImage.copyTo(resImage);
+    if (debug) {
+        cv::Mat resImage;
+        calibImage.copyTo(resImage);
 
-//    cv::aruco::drawDetectedMarkers(resImage, corners, markerIds);
-//    cv::aruco::drawDetectedMarkers(resImage, rejected);
+        cv::aruco::drawDetectedMarkers(resImage, corners, markerIds);
+        cv::aruco::drawDetectedMarkers(resImage, rejected);
 
-//    std::cout << cameraMatrix << std::endl << distCoeffs << std::endl;
+        std::cout << cameraMatrix << std::endl << distCoeffs << std::endl;
 
-//    std::cout << rvecs[0] << std::endl << tvecs[0] << std::endl;
-//    for(auto i = 0; i < markerIds.size(); ++i) {
-//        std::cout << i << std::endl;
-//        cv::aruco::drawAxis(resImage, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 0.5f);
-//    }
-//
-//    cv::namedWindow("res", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-//    cv::imshow("res", resImage);
+        std::cout << rvecs[0] << std::endl << tvecs[0] << std::endl;
+        for(auto i = 0; i < markerIds.size(); ++i) {
+            std::cout << i << std::endl;
+            cv::aruco::drawAxis(resImage, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 0.5f);
+        }
+
+        cv::namedWindow("res", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+        cv::imshow("res", resImage);
+    }
 }
 
 void generateArucoMarker() {

@@ -26,11 +26,12 @@ Ipm::Ipm(const cv::Size &outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec
     std::vector< cv::Point2d > imagePoints;
     cv::projectPoints(worldPoints3D, rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
 
+    // flip around x-axis, make aruco coordinate comply to opencv coordinate
     std::vector<cv::Point2d> worldPoints;
     worldPoints.push_back(cv::Point2d(0, 0));
     worldPoints.push_back(cv::Point2d(1, 0));
-    worldPoints.push_back(cv::Point2d(0, 1));
-    worldPoints.push_back(cv::Point2d(1, 1));
+    worldPoints.push_back(cv::Point2d(0, -1));
+    worldPoints.push_back(cv::Point2d(1, -1));
 
     std::cout << "image points: " << std::endl << imagePoints << std::endl;
     auto inv_homography = cv::findHomography(worldPoints, imagePoints);
