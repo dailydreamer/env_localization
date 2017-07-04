@@ -9,12 +9,13 @@
 void generateArucoMarker() {
     cv::Mat markerImage;
     auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
-    int markerId = 0;
     int markerSize = 200; // px
     int markerBorderSize = 1;
-    cv::aruco::drawMarker(dictionary, markerId, markerSize, markerImage, markerBorderSize);
-    std::string markerImagePath = "gen_aruco.png";
-    cv::imwrite(markerImagePath, markerImage);
+    for (int markerId = 0; markerId < 4; markerId++) {
+        cv::aruco::drawMarker(dictionary, markerId, markerSize, markerImage, markerBorderSize);
+        std::string markerImagePath = "aruco"+std::to_string(markerId)+".png";
+        cv::imwrite(markerImagePath, markerImage);
+    }
 }
 
 int main() {

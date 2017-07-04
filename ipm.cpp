@@ -58,9 +58,9 @@ Ipm::Ipm(const cv::Size &outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec
 
 Ipm::Ipm(std::string filename) {
     // read inv map
-    bool readSuccess = readMaps(filename);
+    bool readSuccess = readIpm(filename);
     if (!readSuccess) {
-        std::cout << "read inv map failed" << std::endl;
+        std::cout << "read ipm failed" << std::endl;
     }
 }
 
@@ -69,13 +69,34 @@ void Ipm::getIpmImage(const cv::Mat& inputImage, cv::Mat& outputImage, int borde
     cv::remap(inputImage, outputImage, _inv_map, cv::noArray(), cv::INTER_LINEAR, borderMode);
 }
 
-void Ipm::getIpmPoints(const std::vector<cv::Point2d>& inputPoints, std::vector<cv::Point2d> outputPoints) {
+void Ipm::getIpmPoints(const std::vector<cv::Point2d>& inputPoints, std::vector<cv::Point2d>& outputPoints) {
+    for (auto point : inputPoints) {
+        outputPoints.push_back(applyHomography(point, _homography));
+    }
+}
+
+void Ipm::getIpmPoints(const std::vector<cv::Point>& inputPoints, std::vector<cv::Point2d>& outputPoints) {
     for (auto point : inputPoints) {
         outputPoints.push_back(applyHomography(point, _homography));
     }
 }
 
 cv::Point2d Ipm::applyHomography( const cv::Point2d& _point, const cv::Mat& _H )
+{
+    cv::Point2d ret = cv::Point2d( -1, -1 );
+
+    const double u = _H.at<double>(0,0) * _point.x + _H.at<double>(0,1) * _point.y + _H.at<double>(0,2);
+    const double v = _H.at<double>(1,0) * _point.x + _H.at<double>(1,1) * _point.y + _H.at<double>(1,2);
+    const double s = _H.at<double>(2,0) * _point.x + _H.at<double>(2,1) * _point.y + _H.at<double>(2,2);
+    if ( s != 0 )
+    {
+        ret.x = ( u / s );
+        ret.y = ( v / s );
+    }
+    return ret;
+}
+
+cv::Point2d Ipm::applyHomography( const cv::Point& _point, const cv::Mat& _H )
 {
     cv::Point2d ret = cv::Point2d( -1, -1 );
 
@@ -107,12 +128,13 @@ cv::Point3d Ipm::applyHomography( const cv::Point3d& _point, const cv::Mat& _H )
     return ret;
 }
 
-bool Ipm::writeMaps(std::string filename) {
+bool Ipm::writeIpm(std::string filename) {
     cv::FileStorage fs(filename, cv::FileStorage::WRITE);
     if(!fs.isOpened()) {
         fs.release();
         return false;
     }
+    fs << "homography" << _homography;
     fs << "inv_map" << _inv_map;
     fs.release();
     return true;
@@ -120,12 +142,13 @@ bool Ipm::writeMaps(std::string filename) {
 
 // private
 
-bool Ipm::readMaps(std::string filename) {
+bool Ipm::readIpm(std::string filename) {
     cv::FileStorage fs(filename, cv::FileStorage::READ);
     if(!fs.isOpened()) {
         fs.release();
         return false;
     }
+    fs["homography"] >> _homography;
     fs["inv_map"] >> _inv_map;
     fs.release();
     return true;

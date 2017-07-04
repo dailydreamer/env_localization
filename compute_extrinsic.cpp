@@ -56,7 +56,7 @@ bool readExtrinsic(std::string filename, std::vector<cv::Vec3d>& rvecs, std::vec
     return true;
 }
 
-void computeExtrinsic(std::string calibImagePath, float markerLength, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs, bool debug = false) {
+void computeExtrinsic(std::string calibImagePath, std::string cameraId, float markerLength, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs, bool debug = false) {
     cv::Mat calibImage = cv::imread(calibImagePath);
     //cv::resize(calibImage, calibImage, cv::Size(800, 600));
 
@@ -71,7 +71,7 @@ void computeExtrinsic(std::string calibImagePath, float markerLength, const cv::
 
     std::vector<cv::Vec3d> rvecs, tvecs;
     cv::aruco::estimatePoseSingleMarkers(corners, markerLength, cameraMatrix, distCoeffs, rvecs, tvecs);
-    bool writeSuccess = writeExtrinsic("./extrinsic.yml", rvecs, tvecs);
+    bool writeSuccess = writeExtrinsic("./extrinsic"+cameraId+".yml", rvecs, tvecs);
     if (!writeSuccess) {
         std::cout << "write extrinsic failed" << std::endl;
     }
@@ -98,31 +98,33 @@ void computeExtrinsic(std::string calibImagePath, float markerLength, const cv::
 
 int main() {
 
+    std::string cameraId = "0";
+
     // read intrinsic
     cv::Mat cameraMatrix, distCoeffs;
-    bool readIntrinsicSuccess = readIntrinsic("./intrinsic.yml", cameraMatrix, distCoeffs);
+    bool readIntrinsicSuccess = readIntrinsic("./intrinsic"+cameraId+".yml", cameraMatrix, distCoeffs);
     if (!readIntrinsicSuccess) {
         std::cout << "read intrinsic failed" << std::endl;
     }
 
     // compute extrinsic
     float markerLength = 140;    // 140 mm, 1mm = 1px
-    computeExtrinsic("aruco.png", markerLength, cameraMatrix, distCoeffs);
+    computeExtrinsic("./extrinsic"+cameraId+".png", cameraId, markerLength, cameraMatrix, distCoeffs);
 
     // read extrinsic
     std::vector<cv::Vec3d> rvecs, tvecs;
-    bool readExtrinsicSuccess = readExtrinsic("./extrinsic.yml", rvecs, tvecs);
+    bool readExtrinsicSuccess = readExtrinsic("./extrinsic"+cameraId+".yml", rvecs, tvecs);
     if (!readExtrinsicSuccess) {
         std::cout << "read extrinsicc failed" << std::endl;
     }
     std::cout << "rvecs: " << rvecs[0] << " tvecs: " << tvecs[0] << std::endl;
 
     // compute Ipm
-    cv::Mat inputImage = cv::imread("aruco.png");
+    cv::Mat inputImage = cv::imread("./extrinsic"+cameraId+".png");
     Ipm ipm(inputImage.size(), rvecs[0], tvecs[0], cameraMatrix, distCoeffs);
-    bool writeSuccess = ipm.writeMaps("./inv_map.yml");
+    bool writeSuccess = ipm.writeIpm("./ipm"+cameraId+".yml");
     if (!writeSuccess) {
-        std::cout << "write inv map failed" << std::endl;
+        std::cout << "write ipm failed" << std::endl;
     }
     return 0;
 }
