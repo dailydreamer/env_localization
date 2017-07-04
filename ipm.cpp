@@ -12,7 +12,7 @@
 Ipm::Ipm(const cv::Size &outputSize, const std::vector<cv::Point2d>& inputPoints, const std::vector<cv::Point2d>& outputPoints) {
     auto inv_homography = cv::findHomography(outputPoints, inputPoints);
     _homography = inv_homography.inv();
-    std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
+//    std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
     createMaps(outputSize, inv_homography);
 }
 
@@ -33,10 +33,10 @@ Ipm::Ipm(const cv::Size &outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec
     worldPoints.push_back(cv::Point2d(0, -1));
     worldPoints.push_back(cv::Point2d(1, -1));
 
-    std::cout << "image points: " << std::endl << imagePoints << std::endl;
+//    std::cout << "image points: " << std::endl << imagePoints << std::endl;
     auto inv_homography = cv::findHomography(worldPoints, imagePoints);
     _homography = inv_homography.inv();
-    std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
+//    std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
 //    inv_homography.at<double>(0,2) -= 100;
 //    std::cout << inv_homography.at<double>(0,2) << std::endl;
     createMaps(outputSize, inv_homography);
@@ -54,6 +54,14 @@ Ipm::Ipm(const cv::Size &outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec
 //            ptRow[x] = pts[0];
 //        }
 //    }
+}
+
+Ipm::Ipm(std::string filename) {
+    // read inv map
+    bool readSuccess = readMaps(filename);
+    if (!readSuccess) {
+        std::cout << "read inv map failed" << std::endl;
+    }
 }
 
 void Ipm::getIpmImage(const cv::Mat& inputImage, cv::Mat& outputImage, int borderMode) {
@@ -99,7 +107,29 @@ cv::Point3d Ipm::applyHomography( const cv::Point3d& _point, const cv::Mat& _H )
     return ret;
 }
 
+bool Ipm::writeMaps(std::string filename) {
+    cv::FileStorage fs(filename, cv::FileStorage::WRITE);
+    if(!fs.isOpened()) {
+        fs.release();
+        return false;
+    }
+    fs << "inv_map" << _inv_map;
+    fs.release();
+    return true;
+}
+
 // private
+
+bool Ipm::readMaps(std::string filename) {
+    cv::FileStorage fs(filename, cv::FileStorage::READ);
+    if(!fs.isOpened()) {
+        fs.release();
+        return false;
+    }
+    fs["inv_map"] >> _inv_map;
+    fs.release();
+    return true;
+}
 
 void Ipm::createMaps(const cv::Size &outputSize, const cv::Mat inv_homography) {
     _inv_map.create(outputSize);

@@ -6,6 +6,11 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-set(SOURCE_FILES main.cpp ipm.cpp ipm.h)
-add_executable(env_localization ${SOURCE_FILES})
+add_executable(env_localization main.cpp ipm.cpp ipm.h)
 target_link_libraries(env_localization ${OpenCV_LIBS})
+
+add_executable(gen_marker gen_marker.cpp)
+target_link_libraries(gen_marker ${OpenCV_LIBS})
+
+add_executable(compute_extrinsic compute_extrinsic.cpp ipm.cpp ipm.h)
+target_link_libraries(compute_extrinsic ${OpenCV_LIBS})
