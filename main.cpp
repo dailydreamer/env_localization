@@ -33,7 +33,7 @@ int main() {
         ipm.getIpmPoints(foregroundPoints, birdViewForegroundPoints);
         auto position = cv::mean(birdViewForegroundPoints);
         auto x = position[0], y = position[1];
-        
+
         std::cout << birdViewForegroundPoints << std::endl << x << " " << y << std::endl;
 
         cv::imshow("frame", frame);

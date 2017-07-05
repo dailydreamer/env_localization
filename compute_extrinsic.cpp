@@ -68,6 +68,9 @@ void computeExtrinsic(std::string calibImagePath, std::string cameraId, float ma
     cv::aruco::detectMarkers(calibImage, dictionary, corners, markerIds, detectorParams, rejected);
 
     std::cout <<"marker: " << markerIds.size() << " rejected: " << rejected.size() << std::endl;
+    if (markerIds.size() == 0) {
+        std::cout << "compute extrinsic failed" << std::endl;
+    }
 
     std::vector<cv::Vec3d> rvecs, tvecs;
     cv::aruco::estimatePoseSingleMarkers(corners, markerLength, cameraMatrix, distCoeffs, rvecs, tvecs);
@@ -83,9 +86,7 @@ void computeExtrinsic(std::string calibImagePath, std::string cameraId, float ma
         cv::aruco::drawDetectedMarkers(resImage, corners, markerIds);
         cv::aruco::drawDetectedMarkers(resImage, rejected);
 
-        std::cout << cameraMatrix << std::endl << distCoeffs << std::endl;
-
-        std::cout << rvecs[0] << std::endl << tvecs[0] << std::endl;
+       // std::cout << rvecs[0] << std::endl << tvecs[0] << std::endl;
         for(auto i = 0; i < markerIds.size(); ++i) {
             std::cout << i << std::endl;
             cv::aruco::drawAxis(resImage, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 0.5f);
@@ -93,12 +94,13 @@ void computeExtrinsic(std::string calibImagePath, std::string cameraId, float ma
 
         cv::namedWindow("res", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
         cv::imshow("res", resImage);
+        cv::waitKey(0);
     }
 }
 
 int main() {
 
-    std::string cameraId = "0";
+    std::string cameraId = "1";
 
     // read intrinsic
     cv::Mat cameraMatrix, distCoeffs;
@@ -108,8 +110,8 @@ int main() {
     }
 
     // compute extrinsic
-    float markerLength = 140;    // 140 mm, 1mm = 1px
-    computeExtrinsic("./extrinsic"+cameraId+".png", cameraId, markerLength, cameraMatrix, distCoeffs);
+    float markerLength = 14;    // 140 mm, 1mm = 1px
+    computeExtrinsic("./extrinsic"+cameraId+".png", cameraId, markerLength, cameraMatrix, distCoeffs, false);
 
     // read extrinsic
     std::vector<cv::Vec3d> rvecs, tvecs;
@@ -126,5 +128,15 @@ int main() {
     if (!writeSuccess) {
         std::cout << "write ipm failed" << std::endl;
     }
+
+    cv::Mat birdViewImage;
+    // cv::cvtColor(inputImage, inputImage, CV_BGR2GRAY);
+    cv::namedWindow("input");
+    cv::imshow("input", inputImage);
+
+    ipm.getIpmImage(inputImage, birdViewImage);
+    cv::namedWindow("birdview");
+    cv::imshow("birdview", birdViewImage);
+    cv::waitKey(0);
     return 0;
 }
