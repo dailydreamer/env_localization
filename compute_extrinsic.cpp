@@ -110,7 +110,7 @@ int main() {
     }
 
     // compute extrinsic
-    float markerLength = 14;    // 140 mm, 1mm = 1px
+    float markerLength = 14;    // 14 cm, 1cm = 1px
     computeExtrinsic("./extrinsic"+cameraId+".png", cameraId, markerLength, cameraMatrix, distCoeffs, false);
 
     // read extrinsic

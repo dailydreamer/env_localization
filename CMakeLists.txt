@@ -12,5 +12,8 @@ target_link_libraries(env_localization ${OpenCV_LIBS})
 add_executable(gen_marker gen_marker.cpp)
 target_link_libraries(gen_marker ${OpenCV_LIBS})
 
-add_executable(compute_extrinsic compute_extrinsic.cpp ipm.cpp ipm.h)
+add_executable(compute_extrinsic compute_extrinsic.cpp ipm.cpp ipm.h recorder.cpp)
 target_link_libraries(compute_extrinsic ${OpenCV_LIBS})
+
+add_executable(recorder recorder.cpp)
+target_link_libraries(recorder ${OpenCV_LIBS})

@@ -8,7 +8,7 @@ int main() {
 
     bool debug = true;
     std::string cameraId = "0";
-    std::string videoPath = "./Video_001.avi";
+    std::string videoPath = "./1.avi";
     cv::VideoCapture capture(videoPath);
     if (!capture.isOpened()) {
         std::cerr << "Cannot open video file: " << videoPath << std::endl;
@@ -16,7 +16,8 @@ int main() {
     }
 
     auto backgroundSubtractorPtr = cv::bgsegm::createBackgroundSubtractorMOG();
-    Ipm ipm("./ipm"+cameraId+".yml");
+//    auto backgroundSubtractorPtr = cv::createBackgroundSubtractorMOG2(500, 16, true);
+//    Ipm ipm("./ipm"+cameraId+".yml");
     cv::namedWindow("frame");
     cv::namedWindow("foreground");
     cv::Mat frame, foreground;
@@ -30,16 +31,16 @@ int main() {
         backgroundSubtractorPtr -> apply(frame, foreground);
 
         cv::findNonZero(foreground, foregroundPoints);
-        ipm.getIpmPoints(foregroundPoints, birdViewForegroundPoints);
-        auto position = cv::mean(birdViewForegroundPoints);
+//        ipm.getIpmPoints(foregroundPoints, birdViewForegroundPoints);
+        auto position = cv::mean(foregroundPoints);
         auto x = position[0], y = position[1];
 
-        std::cout << birdViewForegroundPoints << std::endl << x << " " << y << std::endl;
+        std::cout << foregroundPoints << std::endl << x << " " << y << std::endl;
 
         cv::imshow("frame", frame);
         cv::imshow("foreground", foreground);
         if (debug) {
-            key = cv::waitKey(0);
+            key = cv::waitKey(500);
         } else {
             key = cv::waitKey(100);
         }
