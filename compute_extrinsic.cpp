@@ -15,8 +15,12 @@ bool readIntrinsic(std::string filename, cv::Mat& camMatrix, cv::Mat& distCoeffs
         fs.release();
         return false;
     }
-    fs["camera_matrix"] >> camMatrix;
-    fs["distortion_coefficients"] >> distCoeffs;
+    // for yml
+//    fs["camera_matrix"] >> camMatrix;
+//    fs["distortion_coefficients"] >> distCoeffs;
+    // for xml
+    fs["cameraMatrix"] >> camMatrix;
+    fs["dist_coeffs"] >> distCoeffs;
     fs.release();
     return true;
 }
@@ -99,18 +103,17 @@ void computeExtrinsic(std::string calibImagePath, std::string cameraId, float ma
 }
 
 int main() {
-
     std::string cameraId = "1";
 
     // read intrinsic
     cv::Mat cameraMatrix, distCoeffs;
-    bool readIntrinsicSuccess = readIntrinsic("./intrinsic"+cameraId+".yml", cameraMatrix, distCoeffs);
+    bool readIntrinsicSuccess = readIntrinsic("./intrinsic.xml", cameraMatrix, distCoeffs);
     if (!readIntrinsicSuccess) {
         std::cout << "read intrinsic failed" << std::endl;
     }
 
     // compute extrinsic
-    float markerLength = 14;    // 14 cm, 1cm = 1px
+    float markerLength = 29;    // cm, 1cm = 1px
     computeExtrinsic("./extrinsic"+cameraId+".png", cameraId, markerLength, cameraMatrix, distCoeffs, false);
 
     // read extrinsic
