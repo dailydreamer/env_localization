@@ -45,7 +45,13 @@ int main(int argc, char* argv[])
             }
             writer[i].write(camFrame[i]);
             imshow(windowLabels[i], camFrame[i]);
-            key = cv::waitKey(100);
+        }
+        key = waitKey(100);
+        if (key == 'p') {
+            for (int i = 0; i < cameraNum; ++i) {
+                imwrite(windowLabels[i]+".png", camFrame[i]);
+            }
+            cout << "Write image success!" << endl;
         }
     }
     return 0;
