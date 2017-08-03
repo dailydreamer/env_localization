@@ -10,7 +10,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    const int cameraNum = 2;
+    const int cameraNum = 1;
     VideoCapture cap[cameraNum];
     Mat camFrame[cameraNum];
     string windowLabels[cameraNum];

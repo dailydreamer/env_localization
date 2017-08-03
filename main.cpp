@@ -6,9 +6,9 @@
 
 int main() {
 
-    bool debug = true;
+    bool debug = false;
     std::string cameraId = "0";
-    std::string videoPath = "./1.avi";
+    std::string videoPath = "./camera1.avi";
     cv::VideoCapture capture(videoPath);
     if (!capture.isOpened()) {
         std::cerr << "Cannot open video file: " << videoPath << std::endl;
@@ -35,7 +35,7 @@ int main() {
         auto position = cv::mean(foregroundPoints);
         auto x = position[0], y = position[1];
 
-        std::cout << foregroundPoints << std::endl << x << " " << y << std::endl;
+//        std::cout << foregroundPoints << std::endl << x << " " << y << std::endl;
 
         cv::imshow("frame", frame);
         cv::imshow("foreground", foreground);
