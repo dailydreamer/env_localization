@@ -4,6 +4,15 @@
 #include <opencv2/bgsegm.hpp>
 #include "ipm.h"
 
+void drawCircle( cv::Mat img, cv::Point center )
+{
+    int thickness = -1;
+    int lineType = 8;
+    int radius = 20;
+    circle(img, center, radius, cv::Scalar(200, 200, 200), thickness);
+}
+
+
 int main() {
 
     bool debug = false;
@@ -37,6 +46,7 @@ int main() {
 
 //        std::cout << foregroundPoints << std::endl << x << " " << y << std::endl;
 
+        drawCircle(foreground, cv::Point(x,y));
         cv::imshow("frame", frame);
         cv::imshow("foreground", foreground);
         if (debug) {
