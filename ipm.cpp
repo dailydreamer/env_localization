@@ -9,14 +9,14 @@
 
 // public
 
-Ipm::Ipm(const cv::Size &outputSize, const std::vector<cv::Point2d>& inputPoints, const std::vector<cv::Point2d>& outputPoints) {
+Ipm::Ipm(const cv::Size& outputSize, const std::vector<cv::Point2d>& inputPoints, const std::vector<cv::Point2d>& outputPoints) {
     auto inv_homography = cv::findHomography(outputPoints, inputPoints);
     _homography = inv_homography.inv();
 //    std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
     createMaps(outputSize, inv_homography);
 }
 
-Ipm::Ipm(const cv::Size &outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs) {
+Ipm::Ipm(const cv::Size& outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs) {
     // project world points
     std::vector<cv::Point3d> worldPoints3D;
     worldPoints3D.push_back(cv::Point3d(0, 0, 0));
@@ -36,24 +36,12 @@ Ipm::Ipm(const cv::Size &outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec
 //    std::cout << "image points: " << std::endl << imagePoints << std::endl;
     auto inv_homography = cv::findHomography(worldPoints, imagePoints);
     _homography = inv_homography.inv();
+    
 //    std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
 //    inv_homography.at<double>(0,2) -= 100;
 //    std::cout << inv_homography.at<double>(0,2) << std::endl;
+    
     createMaps(outputSize, inv_homography);
-
-
-//    _inv_map.create(outputSize);
-//    std::vector<cv::Point2d> pts;
-//
-//    for( int y = 0; y < outputSize.height; ++y )
-//    {
-//        auto* ptRow = _inv_map.ptr<cv::Point2f>(y);
-//        for( int x = 0; x < outputSize.width; ++x )
-//        {
-//            cv::projectPoints(std::vector<cv::Point3f> { cv::Point3f( static_cast<float>(x), static_cast<float>(y), 0 ) }, rvec, tvec, cameraMatrix, distCoeffs, pts);
-//            ptRow[x] = pts[0];
-//        }
-//    }
 }
 
 Ipm::Ipm(std::string filename) {
@@ -63,6 +51,15 @@ Ipm::Ipm(std::string filename) {
         std::cout << "read ipm failed" << std::endl;
     }
 }
+
+void Ipm::loadFromFile(std::string filename) {
+    // read inv map
+    bool readSuccess = readIpm(filename);
+    if (!readSuccess) {
+        std::cout << "read ipm failed" << std::endl;
+    }
+}
+
 
 void Ipm::getIpmImage(const cv::Mat& inputImage, cv::Mat& outputImage, int borderMode) {
     // use inverse mapping
