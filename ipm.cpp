@@ -16,30 +16,32 @@ Ipm::Ipm(const cv::Size& outputSize, const std::vector<cv::Point2d>& inputPoints
     createMaps(outputSize, inv_homography);
 }
 
-Ipm::Ipm(const cv::Size& outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs) {
+Ipm::Ipm(const cv::Size& outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs, double transform_x, double transform_y) {
     // project world points
     std::vector<cv::Point3d> worldPoints3D;
     worldPoints3D.push_back(cv::Point3d(0, 0, 0));
-    worldPoints3D.push_back(cv::Point3d(1, 0, 0));
-    worldPoints3D.push_back(cv::Point3d(0, 1, 0));
-    worldPoints3D.push_back(cv::Point3d(1, 1, 0));
+    worldPoints3D.push_back(cv::Point3d(100, 0, 0));
+    worldPoints3D.push_back(cv::Point3d(0, 100, 0));
+    worldPoints3D.push_back(cv::Point3d(100, 100, 0));
     std::vector< cv::Point2d > imagePoints;
     cv::projectPoints(worldPoints3D, rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
 
     // flip around x-axis, make aruco coordinate comply to opencv coordinate
     std::vector<cv::Point2d> worldPoints;
-    worldPoints.push_back(cv::Point2d(0, 0));
-    worldPoints.push_back(cv::Point2d(1, 0));
-    worldPoints.push_back(cv::Point2d(0, -1));
-    worldPoints.push_back(cv::Point2d(1, -1));
+    worldPoints.push_back(cv::Point2d(0+transform_x, 0-transform_y));
+    worldPoints.push_back(cv::Point2d(100+transform_x, 0-transform_y));
+    worldPoints.push_back(cv::Point2d(0+transform_x, -100-transform_y));
+    worldPoints.push_back(cv::Point2d(100+transform_x, -100-transform_y));
 
 //    std::cout << "image points: " << std::endl << imagePoints << std::endl;
     auto inv_homography = cv::findHomography(worldPoints, imagePoints);
+    
+//    cv::Mat_<double> translation = (cv::Mat_<double>(3, 3) << 1, 0, transform_x, 0, 1, transform_y, 0, 0, 1);
+//    inv_homography = translation * inv_homography;
+    
     _homography = inv_homography.inv();
     
-//    std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
-//    inv_homography.at<double>(0,2) -= 100;
-//    std::cout << inv_homography.at<double>(0,2) << std::endl;
+    std::cout << "inv_homography" << std::endl << inv_homography << std::endl;
     
     createMaps(outputSize, inv_homography);
 }

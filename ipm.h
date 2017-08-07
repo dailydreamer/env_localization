@@ -11,7 +11,7 @@ class Ipm {
 public:
     Ipm() {};
     Ipm(const cv::Size& outputSize, const std::vector<cv::Point2d>& inputPoints, const std::vector<cv::Point2d>& outputPoints);
-    Ipm(const cv::Size& outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs);
+    Ipm(const cv::Size& outputSize, const cv::Vec3d& rvec, const cv::Vec3d tvec, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs, double transform_x = 0, double transform_y = 0);
     Ipm(std::string filename);
     void loadFromFile(std::string filename);
     void getIpmImage(const cv::Mat& inputImage, cv::Mat& outputImage, int borderMode = cv::BORDER_CONSTANT);

@@ -103,8 +103,8 @@ void computeExtrinsic(std::string calibImagePath, std::string cameraId, float ma
 }
 
 int main() {
-    std::string cameraId = "1";
-//    int transform_x = 170, transform_y = 170; // transform aruco marker origin point
+    std::string cameraId = "0";
+    int transform_x = 300, transform_y = 140; // transform aruco marker origin point
 
     // read intrinsic
     cv::Mat cameraMatrix, distCoeffs;
@@ -128,15 +128,12 @@ int main() {
     // compute Ipm
     // transform origin point, different for left and right camera
 //    if (cameraId == "0") {
-//      tvecs[0][0] -= transform_x;
-//      tvecs[0][1] += transform_y;
+//      transform_x = -transform_x;
 //    } else if (cameraId == "1") {
-//      tvecs[0][0] += transform_x;
-//      tvecs[0][1] -= transform_y;
+      transform_y = -transform_y;
 //    }
-    std::cout << "rvecs: " << rvecs[0] << " tvecs: " << tvecs[0] << std::endl;
     cv::Mat inputImage = cv::imread("./extrinsic"+cameraId+".png");
-    Ipm ipm(inputImage.size(), rvecs[0], tvecs[0], cameraMatrix, distCoeffs);
+    Ipm ipm(inputImage.size(), rvecs[0], tvecs[0], cameraMatrix, distCoeffs, transform_x, transform_y);
     bool writeSuccess = ipm.writeIpm("./ipm"+cameraId+".yml");
     if (!writeSuccess) {
         std::cout << "write ipm failed" << std::endl;
