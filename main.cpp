@@ -68,20 +68,6 @@ int main() {
       }
     }
 
-//    std::string cameraId = "0";
-//
-//    cv::Mat inputImage = cv::imread("./extrinsic"+cameraId+".png");
-//    Ipm ipm("./ipm"+cameraId+".yml");
-//
-//    cv::Mat birdViewImage;
-//   // cv::cvtColor(inputImage, inputImage, CV_BGR2GRAY);
-//    cv::namedWindow("input");
-//    cv::imshow("input", inputImage);
-//
-//    ipm.getIpmImage(inputImage, birdViewImage);
-//    cv::namedWindow("birdview");
-//    cv::imshow("birdview", birdViewImage);
-//
     cv::waitKey(0);
     cv::destroyAllWindows();
     return 0;
