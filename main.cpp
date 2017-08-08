@@ -23,9 +23,10 @@ std::vector<cv::Point> intersection(std::vector<cv::Point>& v1, std::vector<cv::
   return res;
 }
 
-void vectorToMat(const std::vector<cv::Point>& points, cv::Mat& img) {
+void vectorToMat(const std::vector<cv::Point>& points, cv::Mat& img, double height, double width) {
+  img = cv::Mat::zeros(height, width, CV_8UC1);
   for (auto p : points) {
-    img.at<int>(p) = 1;
+    img.at<int>(p) = 255;
   }
 }
 
@@ -66,15 +67,15 @@ int main() {
   auto backgroundSubtractorPtr = cv::bgsegm::createBackgroundSubtractorMOG();
 //    auto backgroundSubtractorPtr = cv::createBackgroundSubtractorMOG2(500, 16, true);
   
-  double width = capture[0].get(CV_CAP_PROP_FRAME_WIDTH);
-  double height = capture[0].get(CV_CAP_PROP_FRAME_HEIGHT);
+  double videoWidth = capture[0].get(CV_CAP_PROP_FRAME_WIDTH);
+  double videoHeight = capture[0].get(CV_CAP_PROP_FRAME_HEIGHT);
 
-  cv::Mat minimalBirdViewForegroundFrame = cv::Mat::zeros(height, width, CV_8UC1);
+  cv::Mat minimalBirdViewForegroundFrame;
 
   cv::Mat originFrame[cameraNum], foregroundFrame[cameraNum], birdViewForegroundFrame[cameraNum];
   cv::Mat birdViewFrame[cameraNum];
   std::vector<cv::Point> foregroundPoints[cameraNum];
-  std::vector<cv::Point> birdViewForegroundPoints[cameraNum];
+  std::vector<cv::Point> birdViewForegroundPoints[cameraNum], minimalBirdViewForegroundPoints;
   
   const int historyTraceSize = 20;
   std::vector<cv::Point> trace(historyTraceSize);
@@ -88,10 +89,11 @@ int main() {
 	exit(EXIT_FAILURE);
       }
       backgroundSubtractorPtr -> apply(originFrame[i], foregroundFrame[i]);
+
 //        cv::findNonZero(foregroundFrame[i], foregroundPoints[i]);
       ipm[i].getIpmImage(originFrame[i], birdViewFrame[i]);
       ipm[i].getIpmImage(foregroundFrame[i], birdViewForegroundFrame[i]);
-      cv::findNonZero(birdViewForegroundFrame[i], birdViewForegroundPoints[i]);
+//      cv::findNonZero(birdViewForegroundFrame[i], birdViewForegroundPoints[i]);
 //        auto position = cv::mean(birdViewForegroundPoints[i]);
       
 //	backgroundSubtractorPtr -> apply(birdViewFrame[i], foregroundFrame[i]);
@@ -106,8 +108,12 @@ int main() {
     }
     
     // TODO can be change to reduce format, so that can handle any number of cameras
-    auto minimalBirdViewForegroundPoints = intersection(birdViewForegroundPoints[0], birdViewForegroundPoints[1]);
-    vectorToMat(minimalBirdViewForegroundPoints, minimalBirdViewForegroundFrame);
+//    auto minimalBirdViewForegroundPoints = intersection(birdViewForegroundPoints[0], birdViewForegroundPoints[1]);
+//    vectorToMat(minimalBirdViewForegroundPoints, minimalBirdViewForegroundFrame, videoHeight, videoWidth);
+    cv::bitwise_and(birdViewForegroundFrame[0], birdViewForegroundFrame[1], minimalBirdViewForegroundFrame);
+    cv::findNonZero(minimalBirdViewForegroundFrame, minimalBirdViewForegroundPoints);
+   // std::cout << minimalBirdViewForegroundFrame << std::endl;
+   
     auto position = cv::mean(minimalBirdViewForegroundPoints);
     auto x = position[0], y = position[1];
     std::cout << "position: " <<  x << " " << y << std::endl;
