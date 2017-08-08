@@ -80,6 +80,12 @@ void Ipm::getIpmPoints(const std::vector<cv::Point>& inputPoints, std::vector<cv
     }
 }
 
+void Ipm::getIpmPoints(const std::vector<cv::Point>& inputPoints, std::vector<cv::Point>& outputPoints) {
+    for (auto point : inputPoints) {
+        outputPoints.push_back(applyHomography(point, _homography));
+    }
+}
+
 cv::Point2d Ipm::applyHomography( const cv::Point2d& _point, const cv::Mat& _H )
 {
     cv::Point2d ret = cv::Point2d( -1, -1 );
