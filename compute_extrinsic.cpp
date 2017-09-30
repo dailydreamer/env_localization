@@ -67,7 +67,7 @@ void computeExtrinsic(std::string calibImagePath, std::string cameraId, float ma
   std::vector<std::vector<cv::Point2f>> corners, rejected;
   auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
   auto detectorParams = cv::aruco::DetectorParameters::create();
-  detectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+  //detectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
   cv::aruco::detectMarkers(calibImage, dictionary, corners, markerIds, detectorParams, rejected);
 
   std::cout << "marker: " << markerIds.size() << " rejected: " << rejected.size() << std::endl;

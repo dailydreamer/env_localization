@@ -3,6 +3,7 @@ project(env_localization)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# set(OpenCV_DIR /usr/local/opencv3.3.0)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
